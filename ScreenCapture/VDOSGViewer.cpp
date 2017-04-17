@@ -102,7 +102,7 @@ osg::ref_ptr<osg::Node> VDOSGViewer::getChild(const CacheItem& cacheWindowInfo, 
 	state->setMode(GL_LIGHTING, osg::StateAttribute::PROTECTED | osg::StateAttribute::OFF);
 	osg::ref_ptr<osg::MatrixTransform> trans = new osg::MatrixTransform;
 
-	float scale = 0.8f;
+	float scale = 0.75f;
 	int initialOffsetX = this->mTraits->width / 2 + this->mTraits->width / 2 - (width*scale / 2);
 	int initialiOffsetY = this->mTraits->height / 2 + this->mTraits->height / 2 - (height*scale / 2);
 
@@ -128,19 +128,17 @@ BOOL CALLBACK clickChildFIlter(HWND   hwnd, LPARAM lParam) {
 	x -= client.left;
 	y -= client.top;
 	printf("click child window: %d %d %d %d\n", x, y, client.left, client.top);
-	LPARAM newPara= MAKELPARAM(x, y);
+	LPARAM newPara = MAKELPARAM(x, y);
 	PostMessage(hwnd, WM_LBUTTONDOWN, 1, newPara);
 	PostMessage(hwnd, WM_LBUTTONUP, 0, newPara);
 	InvalidateRect(hwnd, NULL, TRUE);
-	UpdateWindow(hwnd);
 	return true;
 }
-void clickWindow(HWND handle,int offsetx,int offsety) {
+void clickWindow(HWND handle, int offsetx, int offsety) {
 	LPARAM lParam = MAKELPARAM(offsetx, offsety);
 	PostMessage(handle, WM_LBUTTONDOWN, 1, lParam);
 	PostMessage(handle, WM_LBUTTONUP, 0, lParam);
 	InvalidateRect(handle, NULL, TRUE);
-	UpdateWindow(handle);
 	printf("click window: %d %d\n", offsetx, offsety);
 	//EnumChildWindows(handle, clickChildFIlter, lParam);
 }
@@ -186,12 +184,12 @@ void VDOSGViewer::moveCamare(float x, float y, float z, float w) {
 	if (pre_x != INT_MIN) {
 		osg::ref_ptr<osgGA::GUIEventAdapter> e = getEventQueue()->createEvent();
 		e->setEventType(osgGA::GUIEventAdapter::EventType::KEYUP);
-		if (z - pre_z > 0) {
-			//e->setKey(osgGA::GUIEventAdapter::KEY_Left);
+		if (z - pre_z > abs(pre_z)*0.0001) {
+			e->setKey(osgGA::GUIEventAdapter::KEY_Left);
 			//e->setKey(osgGA::GUIEventAdapter::KEY_Left);
 		}
-		else if (z - pre_z < 0) {
-			//e->setKey(osgGA::GUIEventAdapter::KEY_Right);
+		else if (z - pre_z < -1 * abs(pre_z)*0.0001) {
+			e->setKey(osgGA::GUIEventAdapter::KEY_Right);
 			//e->setKey(osgGA::GUIEventAdapter::KEY_Right);
 		}
 		getEventQueue()->addEvent(e);
@@ -293,12 +291,12 @@ bool PickHandler::handleNodePick(const osgGA::GUIEventAdapter& ea, osgGA::GUIAct
 }
 
 bool PickHandler::handleKeyboard(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa, const osg::Matrixd& MVPW) {
-	if (ea.getEventType() == osgGA::GUIEventAdapter::EventType::KEYUP||ea.getEventType()==osgGA::GUIEventAdapter::EventType::KEYDOWN) {
+	if (ea.getEventType() == osgGA::GUIEventAdapter::EventType::KEYUP || ea.getEventType() == osgGA::GUIEventAdapter::EventType::KEYDOWN) {
 		osg::ref_ptr<osg::Camera> camera = mViewer->getCamera();
 		osg::ref_ptr<osg::GraphicsContext> gc = camera->getGraphicsContext();
 		int hs = gc->getTraits()->width;
 		int vs = gc->getTraits()->height;
-		int step = 10;
+		int step = 300;
 		if (ea.getKey() == osgGA::GUIEventAdapter::KEY_Left) {
 			moveCamera(camera, osg::Vec3d(-1 * hs / (float)step, 0.f, 0.f));
 		}
